@@ -8,7 +8,7 @@
  * Contributors:
  *    Antonio Garcia-Dominguez - initial API and implementation
  *******************************************************************************/
-package uk.ac.york.mondo.integration.hawk.emf.emfsplitter;
+package org.hawk.emf.emfsplitter;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,6 +43,7 @@ import org.hawk.orientdb.OrientDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
 import org.hawk.workspace.Workspace;
+import org.mondo.generate.index.project.ext.IIndexAttribute;
 import org.mondo.modular.references.ext.IEditorCrossReferences;
 
 /**
@@ -50,7 +51,7 @@ import org.mondo.modular.references.ext.IEditorCrossReferences;
  * the moment, it indexes the whole workspace into a local Hawk instance, which
  * is directly accessed through the underlying graph.
  */
-public class HawkCrossReferences implements IEditorCrossReferences {
+public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttribute {
 
 	private static final String HAWK_INSTANCE = "emfsplitter";
 
@@ -239,6 +240,18 @@ public class HawkCrossReferences implements IEditorCrossReferences {
 				hawkInstance.getIndexer().waitFor(HawkState.RUNNING);
 			}
 			return hawkInstance;
+		}
+	}
+
+	@Override
+	public boolean addIndexedAttribute(String nsURI, String type, String attribute) {
+		try {
+			final HModel hawkInstance = getHawkInstance();
+			hawkInstance.addIndexedAttribute(nsURI, type, attribute);
+			return true;
+		} catch (Exception ex) {
+			HawkCrossReferencesPlugin.getDefault().logError(ex);
+			return false;
 		}
 	}
 

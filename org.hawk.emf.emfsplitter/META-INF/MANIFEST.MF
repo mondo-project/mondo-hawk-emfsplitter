@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Hawk + EMF Splitter integration
-Bundle-SymbolicName: uk.ac.york.mondo.integration.hawk.emf.emfsplitter;singleton:=true
+Bundle-SymbolicName: org.hawk.emf.emfsplitter;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: University of York
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
@@ -9,6 +9,7 @@ Require-Bundle: org.eclipse.osgi,
  org.eclipse.core.runtime,
  org.eclipse.emf.ecore,
  org.mondo.modular.references.ext,
+ org.mondo.generate.index.project,
  org.hawk.core,
  org.hawk.osgiserver,
  org.hawk.workspace,
@@ -19,4 +20,4 @@ Require-Bundle: org.eclipse.osgi,
  org.hawk.ui2,
  org.hawk.epsilon
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: uk.ac.york.mondo.integration.hawk.emf.emfsplitter.HawkCrossReferencesPlugin
+Bundle-Activator: org.hawk.emf.emfsplitter.HawkCrossReferencesPlugin
