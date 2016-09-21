@@ -8,5 +8,12 @@
             class="org.hawk.emf.emfsplitter.HawkCrossReferences">
       </client>
    </extension>
+   <extension
+         point="org.mondo.generate.index.project.indexattribute">
+      <client
+            Id="uk.ac.york.mondo.integration.hawk.emf.emfsplitter.clientAttrIndexer"
+            class="org.hawk.emf.emfsplitter.HawkCrossReferences">
+      </client>
+   </extension>
 
 </plugin>
