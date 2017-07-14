@@ -97,6 +97,8 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 					}
 				}
 
+				final IVcsManager repo = new Workspace();
+				hm.addVCS(repo.getLocation(), repo.getClass().getName(), "", "", false);
 				hm.sync();
 			}
 		} catch (Exception e) {
@@ -230,9 +232,6 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 				hawkInstance = HModel.create(new LocalHawkFactory(), HAWK_INSTANCE, storageFolder,
 							storageFolder.toURI().toASCIIString(), OrientDatabase.class.getName(), null, hawkManager,
 							hawkManager.getCredentialsStore(), 0, 0);
-
-				final IVcsManager repo = new Workspace();
-				hawkInstance.addVCS(repo.getLocation(), repo.getClass().getName(), "", "", false);
 			}
 
 			if (!hawkInstance.isRunning()) {
