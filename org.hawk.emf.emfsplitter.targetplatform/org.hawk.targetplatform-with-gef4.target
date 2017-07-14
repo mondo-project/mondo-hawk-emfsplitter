@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?><target name="Hawk Target Platform" sequenceNumber="167">
+<locations>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="ch.qos.logback.core.source" version="1.1.2.v20160208-0839"/>
+<unit id="org.apache.httpcomponents.httpcore.nio.source" version="4.1.0.v201101201700"/>
+<unit id="org.apache.commons.cli.source" version="1.2.0.v201404270220"/>
+<unit id="org.apache.httpcomponents.httpclient" version="4.5.2.v20170210-0925"/>
+<unit id="org.apache.commons.beanutils.source" version="1.8.0.v201205091237"/>
+<unit id="org.slf4j.binding.simple" version="1.7.10.v20160301-1109"/>
+<unit id="ch.qos.logback.classic.source" version="1.1.2.v20160208-0839"/>
+<unit id="org.apache.commons.lang" version="2.6.0.v201404270220"/>
+<unit id="org.apache.commons.httpclient.source" version="3.1.0.v201012070820"/>
+<unit id="org.apache.commons.httpclient" version="3.1.0.v201012070820"/>
+<unit id="org.apache.commons.collections" version="3.2.2.v201511171945"/>
+<unit id="org.apache.httpcomponents.httpcore.nio" version="4.1.0.v201101201700"/>
+<unit id="org.apache.httpcomponents.httpcore.source" version="4.4.6.v20170210-0925"/>
+<unit id="org.slf4j.api" version="1.7.10.v20170224-1220"/>
+<unit id="org.slf4j.binding.simple.source" version="1.7.10.v20160301-1109"/>
+<unit id="org.apache.commons.io.source" version="2.2.0.v201405211200"/>
+<unit id="ch.qos.logback.core" version="1.1.2.v20160208-0839"/>
+<unit id="org.apache.commons.io" version="2.2.0.v201405211200"/>
+<unit id="org.apache.httpcomponents.httpcore" version="4.4.6.v20170210-0925"/>
+<unit id="org.apache.commons.lang3" version="3.1.0.v201403281430"/>
+<unit id="org.apache.commons.beanutils" version="1.8.0.v201205091237"/>
+<unit id="org.apache.commons.codec" version="1.9.0.v20170208-1614"/>
+<unit id="org.apache.commons.codec.source" version="1.9.0.v20170208-1614"/>
+<unit id="org.apache.commons.lang3.source" version="3.1.0.v201403281430"/>
+<unit id="org.slf4j.api.source" version="1.7.10.v20170224-1220"/>
+<unit id="org.apache.commons.cli" version="1.2.0.v201404270220"/>
+<unit id="ch.qos.logback.classic" version="1.1.2.v20160208-0839"/>
+<unit id="org.apache.commons.collections.source" version="3.2.2.v201511171945"/>
+<unit id="org.apache.httpcomponents.httpclient.source" version="4.5.2.v20170210-0925"/>
+<unit id="org.apache.commons.lang.source" version="2.6.0.v201404270220"/>
+<unit id="javax.ws.rs" version="2.0.1.v201504171603"/>
+<unit id="javax.jws" version="2.0.0.v201005080400"/>
+<unit id="javax.websocket" version="1.0.0.v20140310-1603"/>
+<unit id="javax.mail" version="1.4.0.v201005080615"/>
+<unit id="javax.wsdl.source" version="1.6.2.v201012040545"/>
+<unit id="javax.activation" version="1.1.0.v201211130549"/>
+<unit id="javax.xml.ws" version="2.1.0.v200902101523"/>
+<unit id="javax.jms" version="1.1.0.v201205091237"/>
+<unit id="javax.xml" version="1.3.4.v201005080400"/>
+<unit id="javax.xml.bind" version="2.2.0.v201105210648"/>
+<unit id="javax.xml.rpc" version="1.1.0.v201209140446"/>
+<unit id="javax.servlet.jsp.source" version="2.2.0.v201112011158"/>
+<unit id="javax.activation.source" version="1.1.0.v201211130549"/>
+<unit id="javax.xml.stream" version="1.0.1.v201004272200"/>
+<unit id="javax.transaction" version="1.1.1.v201105210645"/>
+<unit id="javax.servlet.jsp" version="2.2.0.v201112011158"/>
+<unit id="javax.el.source" version="2.2.0.v201303151357"/>
+<unit id="javax.transaction.source" version="1.1.1.v201105210645"/>
+<unit id="javax.xml.soap" version="1.3.0.v201105210645"/>
+<repository location="http://download.eclipse.org/tools/orbit/R-builds/R20170307180635/repository"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.bpmn2.feature.feature.group" version="1.3.0.Final-v20160119-1832"/>
+<unit id="org.eclipse.equinox.server.jetty.feature.group" version="1.3.1.v20160829-1338"/>
+<unit id="org.eclipse.zest.sdk.feature.group" version="1.7.0.201606061308"/>
+<unit id="org.eclipse.graphiti.sdk.feature.feature.group" version="0.13.2.v20161129-0820"/>
+<unit id="org.eclipse.acceleo.feature.group" version="3.6.6.201610060831"/>
+<unit id="org.eclipse.emf.eef.codegen.ecore-feature.feature.group" version="1.5.1.201601141612"/>
+<unit id="org.eclipse.emf.eef.sdk-feature.feature.group" version="1.5.1.201601141612"/>
+<repository location="http://download.eclipse.org/releases/neon/"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.epsilon.hutn.dt.feature.feature.group" version="1.4.0.201611012202"/>
+<unit id="org.eclipse.epsilon.core.dt.feature.feature.group" version="1.4.0.201611012202"/>
+<unit id="org.eclipse.epsilon.emf.feature.feature.group" version="1.4.0.201611012202"/>
+<unit id="org.eclipse.epsilon.core.feature.feature.group" version="1.4.0.201611012202"/>
+<unit id="org.eclipse.epsilon.emf.dt.feature.feature.group" version="1.4.0.201611012202"/>
+<unit id="org.eclipse.epsilon.concordance.feature.feature.group" version="1.4.0.201611012202"/>
+<unit id="org.eclipse.epsilon.hutn.feature.feature.group" version="1.4.0.201611012202"/>
+<repository location="http://download.eclipse.org/epsilon/updates/"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.jetty.bundles.f.feature.group" version="9.2.13.201508192117"/>
+<unit id="org.eclipse.jetty.bundles.f.source.feature.group" version="9.2.13.201508192117"/>
+<repository location="http://download.eclipse.org/jetty/updates/jetty-bundles-9.x/9.2.13.v20150730"/>
+</location>
+<location configuration="/home/antonio/bin/eclipse-neon-clean/configuration" path="/home/antonio/bin/eclipse-neon-clean" type="Profile"/>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.m2m.atl.sdk.feature.group" version="3.7.0.v201603222002"/>
+<unit id="org.eclipse.m2m.atl.emftvm.feature.group" version="3.7.0.v201603222002"/>
+<repository location="http://download.eclipse.org/mmt/atl/updates/releases/3.7/"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.tmatesoft.svnkit" version="1.8.11.r10483_v20150925_0010"/>
+<unit id="org.apache.thrift" version="0.9.3"/>
+<unit id="org.tmatesoft.sqljet" version="1.1.10.r1317_v20140121_0107"/>
+<unit id="org.tmatesoft.svnkit.feature.group" version="1.8.11.r10483_v20150925_0010"/>
+<unit id="org.eclipse.nebula.cwt" version="0.9.0.201302061436"/>
+<unit id="net.java.dev.jna.feature.group" version="4.1.0.v06022015_1911"/>
+<repository location="http://mondo-project.github.io/mondo-hawk/thirdparty-nonp2/"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.gef4.zest.sdk.feature.group" version="1.1.0.201609060946"/>
+<unit id="com.google.inject.assistedinject" version="3.0.0.v201402270930"/>
+<unit id="org.eclipse.gef4.geometry.sdk.feature.group" version="1.0.1.201609060946"/>
+<unit id="org.eclipse.gef4.fx.sdk.feature.group" version="1.0.1.201609060946"/>
+<unit id="org.eclipse.gef4.mvc.sdk.feature.group" version="1.1.0.201609060946"/>
+<unit id="com.google.guava" version="15.0.0.v201403281430"/>
+<unit id="org.eclipse.gef4.graph.sdk.feature.group" version="1.1.0.201609060946"/>
+<unit id="org.eclipse.gef4.common.sdk.feature.group" version="1.1.0.201609060946"/>
+<unit id="com.google.inject" version="3.0.0.v201605172100"/>
+<unit id="org.eclipse.gef4.layout.sdk.feature.group" version="1.0.1.201609060946"/>
+<unit id="com.google.inject.multibindings" version="3.0.0.v201605172100"/>
+<repository location="http://download.eclipse.org/tools/gef/gef4/updates/releases"/>
+</location>
+<location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.fx.runtime.min.feature.feature.group" version="2.4.0.201605100504"/>
+<repository location="http://download.eclipse.org/efxclipse/updates-released/2.4.0/site"/>
+</location>
+</locations>
+</target>
