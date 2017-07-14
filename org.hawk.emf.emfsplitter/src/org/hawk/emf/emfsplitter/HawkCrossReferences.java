@@ -223,7 +223,8 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			HModel hawkInstance = hawkManager.getHawkByName(HAWK_INSTANCE);
 			if (hawkInstance == null) {
 				// TODO: use a path within the workspace directory?
-				final File storageFolder = new File("hawk");
+				File fWorkspaceRoot = new File(ResourcesPlugin.getWorkspace().getRoot().getLocation().toString());
+				final File storageFolder = new File(fWorkspaceRoot, "_emfsplitter-hawk");
 
 				// TODO: limit plugins to EMF, use Neo4j if available
 				hawkInstance = HModel.create(new LocalHawkFactory(), HAWK_INSTANCE, storageFolder,
