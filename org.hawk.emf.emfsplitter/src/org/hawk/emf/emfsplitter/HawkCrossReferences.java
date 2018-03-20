@@ -35,6 +35,7 @@ import org.hawk.core.IVcsManager;
 import org.hawk.core.query.IQueryEngine;
 import org.hawk.core.runtime.LocalHawkFactory;
 import org.hawk.emf.EMFPackage;
+import org.hawk.emf.EMFWrapperFactory;
 import org.hawk.emf.metamodel.EMFMetaModelResource;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
@@ -79,8 +80,9 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 											metamodelURI));
 						}
 
+						final EMFWrapperFactory wf = new EMFWrapperFactory();
 						final String pkgEcore = emfFactory.dumpPackageToString(
-								new EMFPackage(epkg, new EMFMetaModelResource(epkg.eResource(), emfFactory)));
+								new EMFPackage(epkg, wf, new EMFMetaModelResource(epkg.eResource(), wf, emfFactory)));
 						final File tmpEcore = File.createTempFile("tmp", ".ecore");
 						try (final FileOutputStream fOS = new FileOutputStream(tmpEcore)) {
 							fOS.write(pkgEcore.getBytes());
