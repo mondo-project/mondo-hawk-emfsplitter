@@ -31,6 +31,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.epsilon.eol.EolModule;
 import org.eclipse.epsilon.eol.IEolModule;
+import org.eclipse.epsilon.eol.dt.ExtensionPointToolNativeTypeDelegate;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.hawk.core.IMetaModelResourceFactory;
 import org.hawk.core.IStateListener.HawkState;
@@ -264,8 +265,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 	}
 		
 	@Override
-	public Object executeConstraint(String constraint, java.net.URI modelURI, java.net.URI metaModelURI,
-			boolean isUnit) {
+	public Object executeConstraint(String constraint, java.net.URI modelURI, java.net.URI metaModelURI, boolean isUnit) {
 			
 		try {
 			final HModel hawkInstance = getHawkInstance();
@@ -285,6 +285,10 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			final IEolModule module = new EolModule();
 			
 			module.getContext().getModelRepository().addModel(q);
+
+			// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
+			module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
+
 			module.parse(constraint);
 						
 			Object result = module.execute();
