@@ -15,5 +15,12 @@
             class="org.hawk.emf.emfsplitter.HawkCrossReferences">
       </client>
    </extension>
+   <extension
+         point="org.model.constraint.execution.definition.ext">
+      <client
+            Id="Execute_Constraints_Using_Hawk"
+            class="org.hawk.emf.emfsplitter.HawkCrossReferences">
+      </client>
+   </extension>
 
 </plugin>

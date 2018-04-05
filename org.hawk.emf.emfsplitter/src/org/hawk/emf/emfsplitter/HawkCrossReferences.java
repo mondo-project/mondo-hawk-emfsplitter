@@ -29,10 +29,14 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.epsilon.eol.EolModule;
+import org.eclipse.epsilon.eol.IEolModule;
+import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.hawk.core.IMetaModelResourceFactory;
 import org.hawk.core.IStateListener.HawkState;
 import org.hawk.core.IVcsManager;
 import org.hawk.core.query.IQueryEngine;
+import org.hawk.core.query.QueryExecutionException;
 import org.hawk.core.runtime.LocalHawkFactory;
 import org.hawk.emf.EMFPackage;
 import org.hawk.emf.EMFWrapperFactory;
@@ -45,14 +49,16 @@ import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
 import org.hawk.workspace.Workspace;
 import org.mondo.generate.index.project.ext.IIndexAttribute;
+import org.mondo.modular.constraint.ext.def.IExecuteConstraint;
 import org.mondo.modular.references.ext.IEditorCrossReferences;
+
 
 /**
  * Integrates Hawk into the cross reference selector dialog for EMF-Splitter. At
  * the moment, it indexes the whole workspace into a local Hawk instance, which
  * is directly accessed through the underlying graph.
  */
-public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttribute {
+public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttribute, IExecuteConstraint {
 
 	private static final String HAWK_INSTANCE = "emfsplitter";
 
@@ -256,5 +262,40 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			return false;
 		}
 	}
+		
+	@Override
+	public Object executeConstraint(String constraint, java.net.URI modelURI, java.net.URI metaModelURI,
+			boolean isUnit) {
+			
+		try {
+			final HModel hawkInstance = getHawkInstance();
+						
+			/*
+			 * Create Engine to execute query
+			 * */
+			
+			final EOLQueryEngine q = new EOLQueryEngine();
+			try {
+				q.load(hawkInstance.getIndexer());
+				
+			} catch (EolModelLoadingException e) {
+				throw new QueryExecutionException("Loading of EOLQueryEngine failed");
+			}			
+			
+			final IEolModule module = new EolModule();
+			
+			module.getContext().getModelRepository().addModel(q);
+			module.parse(constraint);
+						
+			Object result = module.execute();
+			
+			return result;
+			
+		} catch (Exception e) {
+			HawkCrossReferencesPlugin.getDefault().logError(e);
+			return new BasicEList<Object>();
+		}		
+	}
+	
 
 }
