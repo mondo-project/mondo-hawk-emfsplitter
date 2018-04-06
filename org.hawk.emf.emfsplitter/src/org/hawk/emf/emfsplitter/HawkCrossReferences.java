@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 import org.eclipse.core.resources.IProject;
@@ -29,10 +30,15 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.epsilon.common.util.StringProperties;
+import org.eclipse.epsilon.emc.emf.EmfModel;
 import org.eclipse.epsilon.eol.EolModule;
 import org.eclipse.epsilon.eol.IEolModule;
 import org.eclipse.epsilon.eol.dt.ExtensionPointToolNativeTypeDelegate;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
+import org.eclipse.epsilon.eol.execute.context.Variable;
+import org.eclipse.epsilon.eol.models.IModel;
+import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 import org.hawk.core.IMetaModelResourceFactory;
 import org.hawk.core.IStateListener.HawkState;
 import org.hawk.core.IVcsManager;
@@ -270,10 +276,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		try {
 			final HModel hawkInstance = getHawkInstance();
 						
-			/*
-			 * Create Engine to execute query
-			 * */
-			
+			//Create Engine to execute query
 			final EOLQueryEngine q = new EOLQueryEngine();
 			try {
 				q.load(hawkInstance.getIndexer());
@@ -288,9 +291,31 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 			// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
 			module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
-
 			module.parse(constraint);
+			
+			final Map<String, Object> queryArguments = new HashMap<>();
+			queryArguments.put("filePath", modelURI.toString());
 						
+			if (isUnit == true) {
+				
+				queryArguments.put("repoURL",  modelURI.toString());				
+			} else {
+				
+				java.net.URI parent = modelURI.getPath().endsWith("/") ? modelURI.resolve("..") : modelURI.resolve(".");
+				queryArguments.put("repoURL", parent);				
+			}			
+			
+			// Run the query
+			final Map<String, Object> context = new HashMap<>();
+			context.put(IQueryEngine.PROPERTY_ARGUMENTS, queryArguments);
+			context.put(IQueryEngine.PROPERTY_FILECONTEXT, "*");
+			context.put(IQueryEngine.PROPERTY_REPOSITORYCONTEXT, "*");
+			context.put(IQueryEngine.PROPERTY_ENABLE_TRAVERSAL_SCOPING,true);
+			
+			addQueryArguments(context, module);			
+			
+			module.getContext().getModelRepository().addModel(getModel(metaModelURI.toString(),modelURI.toString()));		
+			
 			Object result = module.execute();
 			
 			return result;
@@ -301,5 +326,36 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		}		
 	}
 	
+	private void addQueryArguments(Map<String, Object> context, final IEolModule module) {
+		if (context != null) {
+			@SuppressWarnings("unchecked")
+			final Map<String, Object> args = (Map<String, Object>) context.get(IQueryEngine.PROPERTY_ARGUMENTS);
+			if (args != null) {
+				for (Entry<String, Object> entry : args.entrySet()) {
+					module.getContext().getFrameStack().putGlobal(new Variable(entry.getKey(), entry.getValue(), null));
+				}
+			}
+		}
+	}
+	
+	private IModel getModel(String metamodelURI, String modelURI) {
+		
+		EmfModel emfModel = new EmfModel();
+		StringProperties properties = new StringProperties();
+		properties.put(EmfModel.PROPERTY_NAME, "Model");
+		properties.put(EmfModel.PROPERTY_FILE_BASED_METAMODEL_URI,
+				metamodelURI);
+		properties.put(EmfModel.PROPERTY_MODEL_URI, 
+				modelURI);
+		properties.put(EmfModel.PROPERTY_READONLOAD, true + "");
+		properties.put(EmfModel.PROPERTY_STOREONDISPOSAL, 
+				true + "");
+		try {
+			emfModel.load(properties, (IRelativePathResolver) null);
+		} catch (EolModelLoadingException e) {			
+			e.printStackTrace();
+		}
+		return emfModel;	
+	}
 
 }
