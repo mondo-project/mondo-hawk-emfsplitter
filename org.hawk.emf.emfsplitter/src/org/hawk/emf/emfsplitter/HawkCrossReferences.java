@@ -342,7 +342,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		
 		EmfModel emfModel = new EmfModel();
 		StringProperties properties = new StringProperties();
-		properties.put(EmfModel.PROPERTY_NAME, "Model");
+		properties.put(EmfModel.PROPERTY_NAME, "resource");//Change Model to "resource"
 		properties.put(EmfModel.PROPERTY_FILE_BASED_METAMODEL_URI,
 				metamodelURI);
 		properties.put(EmfModel.PROPERTY_MODEL_URI, 
