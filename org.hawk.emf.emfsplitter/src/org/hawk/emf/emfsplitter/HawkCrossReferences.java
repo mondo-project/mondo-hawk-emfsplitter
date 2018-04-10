@@ -306,7 +306,9 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 			// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
 			module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
-
+			
+			
+			
 			module.parse(constraint);
 
 			// isUnit = true  -> we only look at the object inside that specific file
