@@ -51,7 +51,6 @@ import org.hawk.emf.EMFWrapperFactory;
 import org.hawk.emf.metamodel.EMFMetaModelResource;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
-import org.hawk.epsilon.emc.CEOLQueryEngine;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.orientdb.OrientDatabase;
@@ -124,6 +123,20 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			return false;
 		}
 		return true;
+	}
+
+	protected String buildDefaultNamespaces(List<String> metamodelURIs) {
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for (String mmURI : metamodelURIs) {
+			if (first) {
+				first = false;
+			} else {
+				sb.append(",");
+			}
+			sb.append(mmURI);
+		}
+		return sb.toString();
 	}
 
 	@Override
@@ -283,9 +296,10 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			final EOLQueryEngine q = new EOLQueryEngine();
 			try {
 				q.load(hawkInstance.getIndexer());
+				q.setDefaultNamespaces(defaultNamespaces);
 			} catch (EolModelLoadingException e) {
 				throw new QueryExecutionException("Loading of EOLQueryEngine failed");
-			}			
+			}
 			
 			final IEolModule module = new EolModule();
 			
