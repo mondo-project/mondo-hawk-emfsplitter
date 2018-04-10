@@ -280,7 +280,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			final HModel hawkInstance = getHawkInstance();
 
 			//Create Engine to execute query
-			final CEOLQueryEngine q = new CEOLQueryEngine();
+			final EOLQueryEngine q = new EOLQueryEngine();
 			try {
 				q.load(hawkInstance.getIndexer());
 			} catch (EolModelLoadingException e) {
@@ -301,27 +301,17 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 			final Map<String, Object> queryArguments = new HashMap<>();
 			queryArguments.put("filePath", modelURI.toString());
-			String repoURL, fileContext;
+			String repoURL;
 			if (isUnit == true) {
 				repoURL = modelURI.toString();
-				fileContext = repoURL;
 			} else {
 				java.net.URI parent = modelURI.getPath().endsWith("/") ? modelURI.resolve("..") : modelURI.resolve(".");
 				repoURL = parent.toString();
-				fileContext = repoURL.endsWith("/") ? repoURL + "*" : repoURL + "/*";
 			}
 			queryArguments.put("repoURL", repoURL);	
+			addQueryArguments(queryArguments, module);	
 			
 			// Run the query
-			final Map<String, Object> context = new HashMap<>();
-			context.put(IQueryEngine.PROPERTY_ARGUMENTS, queryArguments);
-			context.put(IQueryEngine.PROPERTY_FILECONTEXT, fileContext);
-			context.put(IQueryEngine.PROPERTY_REPOSITORYCONTEXT, Workspace.REPOSITORY_URL);
-			context.put(IQueryEngine.PROPERTY_ENABLE_TRAVERSAL_SCOPING, true);
-			q.setContext(context);
-			
-			addQueryArguments(queryArguments, module);	
-
 			Object result = module.execute();
 			if (result instanceof List<?>) {
 				replaceNodesWithURIs(result);
