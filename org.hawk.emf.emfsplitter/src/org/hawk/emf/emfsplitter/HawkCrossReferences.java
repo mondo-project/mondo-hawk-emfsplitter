@@ -287,7 +287,8 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 	}
 		
 	@Override
-	public Object executeConstraint(String constraint, java.net.URI modelURI, boolean isUnit) {
+	public Object executeConstraint(String constraint, java.net.URI modelURI, java.net.URI metaModelURI,
+			List<String> metamodelURIs, boolean isUnit) {
 			
 		try {
 			final HModel hawkInstance = getHawkInstance();
@@ -381,6 +382,6 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			e.printStackTrace();
 		}
 		return emfModel;	
-	}
+	}		
 
 }
