@@ -30,15 +30,11 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.epsilon.common.util.StringProperties;
-import org.eclipse.epsilon.emc.emf.EmfModel;
 import org.eclipse.epsilon.eol.EolModule;
 import org.eclipse.epsilon.eol.IEolModule;
 import org.eclipse.epsilon.eol.dt.ExtensionPointToolNativeTypeDelegate;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.execute.context.Variable;
-import org.eclipse.epsilon.eol.models.IModel;
-import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 import org.hawk.core.IMetaModelResourceFactory;
 import org.hawk.core.IModelIndexer;
 import org.hawk.core.IStateListener.HawkState;
@@ -297,6 +293,8 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			final EOLQueryEngine q = new EOLQueryEngine();
 			try {
 				q.load(hawkInstance.getIndexer());
+
+				final String defaultNamespaces = buildDefaultNamespaces(metamodelURIs);
 				q.setDefaultNamespaces(defaultNamespaces);
 			} catch (EolModelLoadingException e) {
 				throw new QueryExecutionException("Loading of EOLQueryEngine failed");
@@ -363,25 +361,5 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			}
 		}
 	}
-	
-	private IModel getModel(String metamodelURI, String modelURI) {
-		
-		EmfModel emfModel = new EmfModel();
-		StringProperties properties = new StringProperties();
-		properties.put(EmfModel.PROPERTY_NAME, "resource");//Change Model to "resource"
-		properties.put(EmfModel.PROPERTY_FILE_BASED_METAMODEL_URI,
-				metamodelURI);
-		properties.put(EmfModel.PROPERTY_MODEL_URI, 
-				modelURI);
-		properties.put(EmfModel.PROPERTY_READONLOAD, true + "");
-		properties.put(EmfModel.PROPERTY_STOREONDISPOSAL, 
-				true + "");
-		try {
-			emfModel.load(properties, (IRelativePathResolver) null);
-		} catch (EolModelLoadingException e) {			
-			e.printStackTrace();
-		}
-		return emfModel;	
-	}		
 
 }
