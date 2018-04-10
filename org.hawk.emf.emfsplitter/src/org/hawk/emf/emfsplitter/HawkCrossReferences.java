@@ -40,6 +40,7 @@ import org.eclipse.epsilon.eol.execute.context.Variable;
 import org.eclipse.epsilon.eol.models.IModel;
 import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 import org.hawk.core.IMetaModelResourceFactory;
+import org.hawk.core.IModelIndexer;
 import org.hawk.core.IStateListener.HawkState;
 import org.hawk.core.IVcsManager;
 import org.hawk.core.query.IQueryEngine;
@@ -50,7 +51,9 @@ import org.hawk.emf.EMFWrapperFactory;
 import org.hawk.emf.metamodel.EMFMetaModelResource;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
+import org.hawk.epsilon.emc.CEOLQueryEngine;
 import org.hawk.epsilon.emc.EOLQueryEngine;
+import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.orientdb.OrientDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
@@ -275,12 +278,11 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			
 		try {
 			final HModel hawkInstance = getHawkInstance();
-						
+
 			//Create Engine to execute query
-			final EOLQueryEngine q = new EOLQueryEngine();
+			final CEOLQueryEngine q = new CEOLQueryEngine();
 			try {
 				q.load(hawkInstance.getIndexer());
-				
 			} catch (EolModelLoadingException e) {
 				throw new QueryExecutionException("Loading of EOLQueryEngine failed");
 			}			
@@ -291,32 +293,40 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 			// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
 			module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
+
 			module.parse(constraint);
-			
+
+			// isUnit = true  -> we only look at the object inside that specific file
+			// isUnit = false -> we look at the objects inside the folder of that file and recursively down 
+
 			final Map<String, Object> queryArguments = new HashMap<>();
 			queryArguments.put("filePath", modelURI.toString());
-						
+			String repoURL, fileContext;
 			if (isUnit == true) {
-				
-				queryArguments.put("repoURL",  modelURI.toString());				
+				repoURL = modelURI.toString();
+				fileContext = repoURL;
 			} else {
-				
 				java.net.URI parent = modelURI.getPath().endsWith("/") ? modelURI.resolve("..") : modelURI.resolve(".");
-				queryArguments.put("repoURL", parent);				
-			}			
+				repoURL = parent.toString();
+				fileContext = repoURL.endsWith("/") ? repoURL + "*" : repoURL + "/*";
+			}
+			queryArguments.put("repoURL", repoURL);	
 			
 			// Run the query
 			final Map<String, Object> context = new HashMap<>();
 			context.put(IQueryEngine.PROPERTY_ARGUMENTS, queryArguments);
-			context.put(IQueryEngine.PROPERTY_FILECONTEXT, "*");
-			context.put(IQueryEngine.PROPERTY_REPOSITORYCONTEXT, "*");
-			context.put(IQueryEngine.PROPERTY_ENABLE_TRAVERSAL_SCOPING,true);
+			context.put(IQueryEngine.PROPERTY_FILECONTEXT, fileContext);
+			context.put(IQueryEngine.PROPERTY_REPOSITORYCONTEXT, Workspace.REPOSITORY_URL);
+			context.put(IQueryEngine.PROPERTY_ENABLE_TRAVERSAL_SCOPING, true);
+			q.setContext(context);
 			
-			addQueryArguments(context, module);			
-			
-			module.getContext().getModelRepository().addModel(getModel(metaModelURI.toString(),modelURI.toString()));		
-			
+			addQueryArguments(queryArguments, module);	
+
 			Object result = module.execute();
+			if (result instanceof List<?>) {
+				replaceNodesWithURIs(result);
+			}
+			
 			
 			return result;
 			
@@ -325,15 +335,26 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			return new BasicEList<Object>();
 		}		
 	}
+
+	@SuppressWarnings("unchecked")
+	protected void replaceNodesWithURIs(Object result) {
+		List<Object> l = (List<Object>)result;
+		for (int i = 0; i < l.size(); i++) {
+			Object elem = l.get(i);
+			if (elem instanceof GraphNodeWrapper) {
+				GraphNodeWrapper gw = (GraphNodeWrapper) elem;
+				String url = gw.getNode().getProperty(IModelIndexer.IDENTIFIER_PROPERTY) + "";
+				l.set(i, url);
+			} else if (elem instanceof List<?>) {
+				replaceNodesWithURIs(elem);
+			}
+		}
+	}
 	
-	private void addQueryArguments(Map<String, Object> context, final IEolModule module) {
-		if (context != null) {
-			@SuppressWarnings("unchecked")
-			final Map<String, Object> args = (Map<String, Object>) context.get(IQueryEngine.PROPERTY_ARGUMENTS);
-			if (args != null) {
-				for (Entry<String, Object> entry : args.entrySet()) {
-					module.getContext().getFrameStack().putGlobal(new Variable(entry.getKey(), entry.getValue(), null));
-				}
+	private void addQueryArguments(Map<String, Object> args, IEolModule module) {
+		if (args != null) {
+			for (Entry<String, Object> entry : args.entrySet()) {
+				module.getContext().getFrameStack().putGlobal(new Variable(entry.getKey(), entry.getValue(), null));
 			}
 		}
 	}
