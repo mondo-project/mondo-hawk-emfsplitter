@@ -313,6 +313,16 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			// isUnit = false -> we look at the objects inside the folder of that file and recursively down 
 
 			final Map<String, Object> queryArguments = new HashMap<>();
+
+			// Model.getAllOf(...) expects:
+			// * The URI of the ePackage
+			// * The name of the eClass
+			// * String with comma-separated list of patterns (based on paths within workspace starting with slash, e.g. /project/folder/b.xmi)
+			//   - specific files: /project/folder/b.xmi
+			//   - wildcards: /project/* (everything in that project),
+			//                /project/folder/* (everything in that folder),
+			//                /project/folder/b*.xmi (every .xmi starting with b in that folder)
+
 			queryArguments.put("filePath", modelURI.toString());
 			String repoURL;
 			if (isUnit == true) {
