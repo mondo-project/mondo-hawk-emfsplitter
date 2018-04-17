@@ -12,6 +12,7 @@ package org.hawk.emf.emfsplitter;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,24 +22,25 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.plugin.EcorePlugin;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.URIConverter;
-import org.eclipse.emf.ecore.resource.impl.ExtensibleURIConverterImpl;
 import org.eclipse.epsilon.eol.EolModule;
 import org.eclipse.epsilon.eol.IEolModule;
 import org.eclipse.epsilon.eol.dt.ExtensionPointToolNativeTypeDelegate;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.execute.context.Variable;
 import org.hawk.core.IMetaModelResourceFactory;
-import org.hawk.core.IModelIndexer;
 import org.hawk.core.IStateListener.HawkState;
 import org.hawk.core.IVcsManager;
 import org.hawk.core.query.IQueryEngine;
@@ -51,6 +53,7 @@ import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
+import org.hawk.graph.ModelElementNode;
 import org.hawk.orientdb.OrientDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
@@ -326,13 +329,9 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			
 			
 			// Convert java.net.URI to emf.URI
-			URIConverter converter = new ExtensibleURIConverterImpl();
-			URI fileUri = URI.createFileURI(ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + File.separator);
-			URI platformURI = URI.createPlatformResourceURI("/", false);
-			converter.getURIMap().put(fileUri, platformURI);
-			URI platformFileURI = converter.normalize(URI.createURI(modelURI.toString()));
-			
-			String filePath = platformFileURI.path().substring(9);
+			IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+			IFile[] modelFile = workspaceRoot.findFilesForLocationURI(modelURI);
+			String filePath = modelFile[0].getFullPath().toString();
 					
 			queryArguments.put("filePath", filePath);
 			queryArguments.put("mmURI", metamodelURIs.get(0));
@@ -369,8 +368,15 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			Object elem = l.get(i);
 			if (elem instanceof GraphNodeWrapper) {
 				GraphNodeWrapper gw = (GraphNodeWrapper) elem;
-				String url = gw.getNode().getProperty(IModelIndexer.IDENTIFIER_PROPERTY) + "";
-				l.set(i, url);
+
+				final ModelElementNode meNode = new ModelElementNode(gw.getNode());
+
+				IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+					IFile iFile = workspaceRoot.getFile(new Path(meNode.getFileNode().getFilePath()));
+					if (iFile != null) {
+						l.set(i, iFile.getLocationURI().toString() + "#" + meNode.getElementId());
+					}
+
 			} else if (elem instanceof List<?>) {
 				replaceNodesWithURIs(elem);
 			}

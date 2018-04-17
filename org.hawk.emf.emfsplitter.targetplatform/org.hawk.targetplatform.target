@@ -84,13 +84,13 @@
 <repository location="http://download.eclipse.org/tools/orbit/R-builds/R20170307180635/repository"/>
 </location>
 <location includeAllPlatforms="true" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.epsilon.concordance.feature.feature.group" version="1.5.0.201803272210"/>
-<unit id="org.eclipse.epsilon.core.dt.feature.feature.group" version="1.5.0.201803272210"/>
-<unit id="org.eclipse.epsilon.core.feature.feature.group" version="1.5.0.201803272210"/>
-<unit id="org.eclipse.epsilon.emf.dt.feature.feature.group" version="1.5.0.201803272210"/>
-<unit id="org.eclipse.epsilon.emf.feature.feature.group" version="1.5.0.201803272210"/>
-<unit id="org.eclipse.epsilon.hutn.dt.feature.feature.group" version="1.5.0.201803272210"/>
-<unit id="org.eclipse.epsilon.hutn.feature.feature.group" version="1.5.0.201803272210"/>
+<unit id="org.eclipse.epsilon.concordance.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.epsilon.core.dt.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.epsilon.core.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.epsilon.emf.dt.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.epsilon.emf.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.epsilon.hutn.dt.feature.feature.group" version="0.0.0"/>
+<unit id="org.eclipse.epsilon.hutn.feature.feature.group" version="0.0.0"/>
 <repository location="http://download.eclipse.org/epsilon/interim/"/>
 </location>
 </locations>
