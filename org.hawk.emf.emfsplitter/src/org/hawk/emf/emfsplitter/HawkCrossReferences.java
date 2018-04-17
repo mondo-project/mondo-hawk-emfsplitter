@@ -325,12 +325,10 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			//                /project/folder/* (everything in that folder),
 			//                /project/folder/b*.xmi (every .xmi starting with b in that folder)
 			
-			
-			// Convert java.net.URI to emf.URI
+			// Convert java.net.URI to workspace path (substring after platform:/resource)
 			IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 			IFile[] modelFile = workspaceRoot.findFilesForLocationURI(modelURI);
 			String filePath = modelFile[0].getFullPath().toString();
-					
 			queryArguments.put("filePath", filePath);
 			queryArguments.put("mmURI", metamodelURIs.get(0));
 			
@@ -365,16 +363,14 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		for (int i = 0; i < l.size(); i++) {
 			Object elem = l.get(i);
 			if (elem instanceof GraphNodeWrapper) {
-				GraphNodeWrapper gw = (GraphNodeWrapper) elem;
-
+				final GraphNodeWrapper gw = (GraphNodeWrapper) elem;
 				final ModelElementNode meNode = new ModelElementNode(gw.getNode());
 
 				IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-					IFile iFile = workspaceRoot.getFile(new Path(meNode.getFileNode().getFilePath()));
-					if (iFile != null) {
-						l.set(i, iFile.getLocationURI().toString() + "#" + meNode.getElementId());
-					}
-
+				IFile iFile = workspaceRoot.getFile(new Path(meNode.getFileNode().getFilePath()));
+				if (iFile != null) {
+					l.set(i, iFile.getLocationURI().toString() + "#" + meNode.getElementId());
+				}
 			} else if (elem instanceof List<?>) {
 				replaceNodesWithURIs(elem);
 			}
