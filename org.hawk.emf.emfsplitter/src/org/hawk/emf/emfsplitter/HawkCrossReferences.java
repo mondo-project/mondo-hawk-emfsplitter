@@ -30,6 +30,8 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.URIConverter;
+import org.eclipse.emf.ecore.resource.impl.ExtensibleURIConverterImpl;
 import org.eclipse.epsilon.eol.EolModule;
 import org.eclipse.epsilon.eol.IEolModule;
 import org.eclipse.epsilon.eol.dt.ExtensionPointToolNativeTypeDelegate;
@@ -306,9 +308,6 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 			// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
 			module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
-			
-			
-			
 			module.parse(constraint);
 
 			// isUnit = true  -> we only look at the object inside that specific file
@@ -324,8 +323,20 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			//   - wildcards: /project/* (everything in that project),
 			//                /project/folder/* (everything in that folder),
 			//                /project/folder/b*.xmi (every .xmi starting with b in that folder)
-
-			queryArguments.put("filePath", modelURI.toString());
+			
+			
+			// Convert java.net.URI to emf.URI
+			URIConverter converter = new ExtensibleURIConverterImpl();
+			URI fileUri = URI.createFileURI(ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + File.separator);
+			URI platformURI = URI.createPlatformResourceURI("/", false);
+			converter.getURIMap().put(fileUri, platformURI);
+			URI platformFileURI = converter.normalize(URI.createURI(modelURI.toString()));
+			
+			String filePath = platformFileURI.path().substring(9);
+					
+			queryArguments.put("filePath", filePath);
+			queryArguments.put("mmURI", metamodelURIs.get(0));
+			
 			String repoURL;
 			if (isUnit == true) {
 				repoURL = modelURI.toString();
