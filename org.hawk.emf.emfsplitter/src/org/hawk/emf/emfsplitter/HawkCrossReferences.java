@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,6 +51,7 @@ import org.hawk.emf.EMFWrapperFactory;
 import org.hawk.emf.metamodel.EMFMetaModelResource;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
+import org.hawk.epsilon.emc.CEOLQueryEngine;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.graph.ModelElementNode;
@@ -293,12 +296,10 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			final HModel hawkInstance = getHawkInstance();
 
 			//Create Engine to execute query
-			final EOLQueryEngine q = new EOLQueryEngine();
+			final CEOLQueryEngine q = new CEOLQueryEngine();
 			try {
 				q.load(hawkInstance.getIndexer());
-
-				final String defaultNamespaces = buildDefaultNamespaces(metamodelURIs);
-				q.setDefaultNamespaces(defaultNamespaces);
+				
 			} catch (EolModelLoadingException e) {
 				throw new QueryExecutionException("Loading of EOLQueryEngine failed");
 			}
@@ -329,18 +330,26 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 			IFile[] modelFile = workspaceRoot.findFilesForLocationURI(modelURI);
 			String filePath = modelFile[0].getFullPath().toString();
-			queryArguments.put("filePath", filePath);
+			queryArguments.put("filePath",filePath);
 			queryArguments.put("mmURI", metamodelURIs.get(0));
+			
 			
 			String repoURL;
 			if (isUnit == true) {
-				repoURL = modelURI.toString();
+				repoURL = modelFile[0].getFullPath().toString();
 			} else {
-				java.net.URI parent = modelURI.getPath().endsWith("/") ? modelURI.resolve("..") : modelURI.resolve(".");
-				repoURL = parent.toString();
+				repoURL = modelFile[0].getParent().getFullPath().toString().concat("/*");
 			}
-			queryArguments.put("repoURL", repoURL);	
-			addQueryArguments(queryArguments, module);	
+			
+			Map<String, Object> context = new HashMap<String, Object>();
+			
+			final String defaultNamespaces = buildDefaultNamespaces(metamodelURIs);
+						
+			context.put(EOLQueryEngine.PROPERTY_DEFAULTNAMESPACES, defaultNamespaces);
+			context.put(EOLQueryEngine.PROPERTY_FILECONTEXT, repoURL);
+			q.setContext(context);
+			
+			addQueryArguments(queryArguments, module);		
 			
 			// Run the query
 			Object result = module.execute();
