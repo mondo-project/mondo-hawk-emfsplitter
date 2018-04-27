@@ -363,6 +363,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 			context.put(EOLQueryEngine.PROPERTY_DEFAULTNAMESPACES, defaultNamespaces);
 			context.put(EOLQueryEngine.PROPERTY_FILECONTEXT, repoURL);
+			context.put(EOLQueryEngine.PROPERTY_FILEFIRST, true + "");
 			queryEngine.setContext(context);
 			addQueryArguments(queryArguments, module);
 
