@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 University of York.
+ * Copyright (c) 2016-2018 University of York, Aston University.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,14 +14,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledFuture;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -42,6 +42,7 @@ import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.execute.context.Variable;
 import org.hawk.core.IMetaModelResourceFactory;
 import org.hawk.core.IStateListener.HawkState;
+import org.hawk.core.graph.IGraphTransaction;
 import org.hawk.core.IVcsManager;
 import org.hawk.core.query.IQueryEngine;
 import org.hawk.core.query.QueryExecutionException;
@@ -55,7 +56,7 @@ import org.hawk.epsilon.emc.CEOLQueryEngine;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.graph.ModelElementNode;
-import org.hawk.orientdb.OrientDatabase;
+import org.hawk.neo4j_v2.Neo4JDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
 import org.hawk.workspace.Workspace;
@@ -263,7 +264,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 				// TODO: limit plugins to EMF, use Neo4j if available
 				hawkInstance = HModel.create(new LocalHawkFactory(), HAWK_INSTANCE, storageFolder,
-							storageFolder.toURI().toASCIIString(), OrientDatabase.class.getName(), null, hawkManager,
+							storageFolder.toURI().toASCIIString(), Neo4JDatabase.class.getName(), null, hawkManager,
 							hawkManager.getCredentialsStore(), 0, 0);
 			}
 
@@ -289,81 +290,97 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 	}
 		
 	@Override
-	public Object executeConstraint(String constraint, java.net.URI modelURI, java.net.URI metaModelURI,
-			List<String> metamodelURIs, boolean isUnit) {
-			
+	public Object executeConstraint(final String constraint, final java.net.URI modelURI, final java.net.URI metaModelURI, final List<String> metamodelURIs, final boolean isUnit) {
 		try {
 			final HModel hawkInstance = getHawkInstance();
 
-			//Create Engine to execute query
-			final CEOLQueryEngine q = new CEOLQueryEngine();
-			try {
-				q.load(hawkInstance.getIndexer());
-				
-			} catch (EolModelLoadingException e) {
-				throw new QueryExecutionException("Loading of EOLQueryEngine failed");
-			}
-			
-			final IEolModule module = new EolModule();
-			
-			module.getContext().getModelRepository().addModel(q);
+			// We need to do it here rather than in the scheduled task, or it will fail to find any files
+			final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+			final IFile[] modelFile = workspaceRoot.findFilesForLocationURI(modelURI);
 
-			// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
-			module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
-			module.parse(constraint);
+			/*
+			 * We schedule this task to be done as soon as possible, while avoiding
+			 * interference with normal indexing of Hawk. The building process seems to
+			 * trigger change notifications at the start, which trigger reindexing. This is
+			 * a problem for backends like Neo4j, which forbid queries during batch updates.
+			 */
+			ScheduledFuture<Object> scheduled = hawkInstance.getIndexer().scheduleTask(new Callable<Object>() {
+				@Override
+				public Object call() throws Exception {
+					return doExecuteConstraint(constraint, metaModelURI, metamodelURIs, isUnit, modelFile);
+				}
+			}, 0);
 
-			// isUnit = true  -> we only look at the object inside that specific file
-			// isUnit = false -> we look at the objects inside the folder of that file and recursively down 
+			return scheduled.get();		
+		} catch (Exception e) {
+			HawkCrossReferencesPlugin.getDefault().logError(e);
+			return new BasicEList<Object>();
+		}
+	}
 
-			final Map<String, Object> queryArguments = new HashMap<>();
+	protected Object doExecuteConstraint(String constraint, java.net.URI modelURI, List<String> metamodelURIs,
+			boolean isUnit, IFile[] modelFile) throws Exception {
+		final HModel hawkInstance = getHawkInstance();
 
-			// Model.getAllOf(...) expects:
-			// * The URI of the ePackage
-			// * The name of the eClass
-			// * String with comma-separated list of patterns (based on paths within workspace starting with slash, e.g. /project/folder/b.xmi)
-			//   - specific files: /project/folder/b.xmi
-			//   - wildcards: /project/* (everything in that project),
-			//                /project/folder/* (everything in that folder),
-			//                /project/folder/b*.xmi (every .xmi starting with b in that folder)
-			
-			// Convert java.net.URI to workspace path (substring after platform:/resource)
-			IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-			IFile[] modelFile = workspaceRoot.findFilesForLocationURI(modelURI);
-			String filePath = modelFile[0].getFullPath().toString();
-			queryArguments.put("filePath",filePath);
-			queryArguments.put("mmURI", metamodelURIs.get(0));
-			
-			
-			String repoURL;
-			if (isUnit == true) {
-				repoURL = modelFile[0].getFullPath().toString();
-			} else {
-				repoURL = modelFile[0].getParent().getFullPath().toString().concat("/*");
-			}
-			
-			Map<String, Object> context = new HashMap<String, Object>();
-			
-			final String defaultNamespaces = buildDefaultNamespaces(metamodelURIs);
-						
-			context.put(EOLQueryEngine.PROPERTY_DEFAULTNAMESPACES, defaultNamespaces);
-			context.put(EOLQueryEngine.PROPERTY_FILECONTEXT, repoURL);
-			q.setContext(context);
-			
-			addQueryArguments(queryArguments, module);		
-			
-			// Run the query
+		// Create Engine to execute query
+		final CEOLQueryEngine q = new CEOLQueryEngine();
+		try {
+			q.load(hawkInstance.getIndexer());
+		} catch (EolModelLoadingException e) {
+			throw new QueryExecutionException("Loading of EOLQueryEngine failed");
+		}
+
+		final IEolModule module = new EolModule();
+		module.getContext().getModelRepository().addModel(q);
+
+		// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
+		module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
+		module.parse(constraint);
+
+		// Model.getAllOf(...) expects:
+		// * The URI of the ePackage
+		// * The name of the eClass
+		// * String with comma-separated list of patterns (based on paths within
+		// workspace starting with slash, e.g. /project/folder/b.xmi)
+		// - specific files: /project/folder/b.xmi
+		// - wildcards: /project/* (everything in that project),
+		// /project/folder/* (everything in that folder),
+		// /project/folder/b*.xmi (every .xmi starting with b in that folder)
+
+		// Convert java.net.URI to workspace path (substring after platform:/resource)
+		String filePath = modelFile[0].getFullPath().toString();
+		final Map<String, Object> queryArguments = new HashMap<>();
+		queryArguments.put("filePath", filePath);
+		queryArguments.put("mmURI", metamodelURIs.get(0));
+
+		// isUnit = true -> we only look at the object inside that specific file
+		// isUnit = false -> we look at the objects inside the folder of that file and
+		// recursively down
+		String repoURL;
+		if (isUnit == true) {
+			repoURL = modelFile[0].getFullPath().toString();
+		} else {
+			repoURL = modelFile[0].getParent().getFullPath().toString().concat("/*");
+		}
+
+		Map<String, Object> context = new HashMap<String, Object>();
+
+		final String defaultNamespaces = buildDefaultNamespaces(metamodelURIs);
+
+		context.put(EOLQueryEngine.PROPERTY_DEFAULTNAMESPACES, defaultNamespaces);
+		context.put(EOLQueryEngine.PROPERTY_FILECONTEXT, repoURL);
+		q.setContext(context);
+
+		addQueryArguments(queryArguments, module);
+
+		try (IGraphTransaction tx = getHawkInstance().getGraph().beginTransaction()) {
 			Object result = module.execute();
 			if (result instanceof List<?>) {
 				replaceNodesWithURIs(result);
 			}
-			
-			
+			tx.success();
 			return result;
-			
-		} catch (Exception e) {
-			HawkCrossReferencesPlugin.getDefault().logError(e);
-			return new BasicEList<Object>();
-		}		
+		}
 	}
 
 	@SuppressWarnings("unchecked")
