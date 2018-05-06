@@ -275,7 +275,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 				hawkInstance = HModel.create(new LocalHawkFactory(), HAWK_INSTANCE, storageFolder,
 							storageFolder.toURI().toASCIIString(), Neo4JDatabase.class.getName(),
-							plugins, hawkManager, hawkManager.getCredentialsStore(), 0, 0);
+							plugins, hawkManager, hawkManager.getCredentialsStore(), 1_000, 10_000);
 			}
 
 			if (!hawkInstance.isRunning()) {
