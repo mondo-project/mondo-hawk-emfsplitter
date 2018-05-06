@@ -53,15 +53,12 @@ import org.hawk.emf.EMFPackage;
 import org.hawk.emf.EMFWrapperFactory;
 import org.hawk.emf.metamodel.EMFMetaModelResource;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
-import org.hawk.emf.model.EMFModelResource;
 import org.hawk.emf.model.EMFModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
 import org.hawk.epsilon.emc.CEOLQueryEngine;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.graph.ModelElementNode;
-import org.hawk.graph.updater.GraphMetaModelUpdater;
-import org.hawk.graph.updater.GraphModelUpdater;
 import org.hawk.neo4j_v2.Neo4JDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
@@ -69,7 +66,6 @@ import org.hawk.workspace.Workspace;
 import org.mondo.generate.index.project.ext.IIndexAttribute;
 import org.mondo.modular.constraint.ext.def.IExecuteConstraint;
 import org.mondo.modular.references.ext.IEditorCrossReferences;
-import org.osgi.framework.FrameworkUtil;
 
 
 /**
