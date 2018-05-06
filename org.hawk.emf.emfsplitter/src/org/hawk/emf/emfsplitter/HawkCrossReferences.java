@@ -34,10 +34,10 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.epsilon.eol.EolModule;
 import org.eclipse.epsilon.eol.IEolModule;
-import org.eclipse.epsilon.eol.dt.ExtensionPointToolNativeTypeDelegate;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.execute.context.Variable;
 import org.hawk.core.IMetaModelResourceFactory;
@@ -53,11 +53,15 @@ import org.hawk.emf.EMFPackage;
 import org.hawk.emf.EMFWrapperFactory;
 import org.hawk.emf.metamodel.EMFMetaModelResource;
 import org.hawk.emf.metamodel.EMFMetaModelResourceFactory;
+import org.hawk.emf.model.EMFModelResource;
+import org.hawk.emf.model.EMFModelResourceFactory;
 import org.hawk.emfresource.impl.LocalHawkResourceImpl;
 import org.hawk.epsilon.emc.CEOLQueryEngine;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.graph.ModelElementNode;
+import org.hawk.graph.updater.GraphMetaModelUpdater;
+import org.hawk.graph.updater.GraphModelUpdater;
 import org.hawk.neo4j_v2.Neo4JDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
@@ -65,6 +69,7 @@ import org.hawk.workspace.Workspace;
 import org.mondo.generate.index.project.ext.IIndexAttribute;
 import org.mondo.modular.constraint.ext.def.IExecuteConstraint;
 import org.mondo.modular.references.ext.IEditorCrossReferences;
+import org.osgi.framework.FrameworkUtil;
 
 
 /**
@@ -80,6 +85,9 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 	public boolean init(List<String> metamodelURIs, String modularNature) {
 		try {
 			final HModel hm = getHawkInstance();
+
+			metamodelURIs = new ArrayList<>(metamodelURIs);
+			metamodelURIs.add(EcorePackage.eINSTANCE.getNsURI());
 
 			if (!hm.getRegisteredMetamodels().containsAll(metamodelURIs)) {
 				final List<File> dumped = new ArrayList<>();
@@ -260,14 +268,18 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		synchronized (hawkManager) {
 			HModel hawkInstance = hawkManager.getHawkByName(HAWK_INSTANCE);
 			if (hawkInstance == null) {
-				// TODO: use a path within the workspace directory?
 				File fWorkspaceRoot = new File(ResourcesPlugin.getWorkspace().getRoot().getLocation().toString());
 				final File storageFolder = new File(fWorkspaceRoot, "_emfsplitter-hawk");
 
-				// TODO: limit plugins to EMF, use Neo4j if available
+				// Limit to EMF, EOL and core graph updater
+				List<String> plugins = Arrays.asList(
+					EMFMetaModelResourceFactory.class.getName(),
+					EMFModelResourceFactory.class.getName()
+				);
+
 				hawkInstance = HModel.create(new LocalHawkFactory(), HAWK_INSTANCE, storageFolder,
-							storageFolder.toURI().toASCIIString(), Neo4JDatabase.class.getName(), null, hawkManager,
-							hawkManager.getCredentialsStore(), 0, 0);
+							storageFolder.toURI().toASCIIString(), Neo4JDatabase.class.getName(),
+							plugins, hawkManager, hawkManager.getCredentialsStore(), 0, 0);
 			}
 
 			if (!hawkInstance.isRunning()) {
@@ -327,9 +339,6 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			final IEolModule module = new EolModule();
 			final CEOLQueryEngine queryEngine = getQueryEngine();
 			module.getContext().getModelRepository().addModel(queryEngine);
-
-			// Allows tools (e.g. EmfTool) registered through Eclipse extension points to work
-			module.getContext().getNativeTypeDelegates().add(new ExtensionPointToolNativeTypeDelegate());
 			module.parse(constraint);
 
 			// Model.getAllOf(...) expects:
@@ -361,9 +370,15 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 			Map<String, Object> context = new HashMap<String, Object>();
 			final String defaultNamespaces = buildDefaultNamespaces(metamodelURIs);
 
+			context.put(EOLQueryEngine.PROPERTY_REPOSITORYCONTEXT, Workspace.REPOSITORY_URL);
 			context.put(EOLQueryEngine.PROPERTY_DEFAULTNAMESPACES, defaultNamespaces);
-			context.put(EOLQueryEngine.PROPERTY_FILECONTEXT, repoURL);
-			context.put(EOLQueryEngine.PROPERTY_FILEFIRST, isUnit + "");
+			if (isUnit) {
+				context.put(EOLQueryEngine.PROPERTY_FILECONTEXT, repoURL);
+				context.put(EOLQueryEngine.PROPERTY_FILEFIRST, isUnit + "");
+			} else {
+				context.put(EOLQueryEngine.PROPERTY_SUBTREECONTEXT, filePath);
+				context.put(EOLQueryEngine.PROPERTY_SUBTREE_DERIVEDALLOF, "true");
+			}
 			queryEngine.setContext(context);
 			addQueryArguments(queryArguments, module);
 
