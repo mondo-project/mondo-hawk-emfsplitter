@@ -22,6 +22,9 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -275,7 +278,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 				hawkInstance = HModel.create(new LocalHawkFactory(), HAWK_INSTANCE, storageFolder,
 							storageFolder.toURI().toASCIIString(), Neo4JDatabase.class.getName(),
-							plugins, hawkManager, hawkManager.getCredentialsStore(), 1_000, 10_000);
+							plugins, hawkManager, hawkManager.getCredentialsStore(), 10_000, 100_000);
 			}
 
 			if (!hawkInstance.isRunning()) {
@@ -457,8 +460,32 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 
 	@Override
 	public void update() {
-		// TODO Auto-generated method stub
-		
+		try {
+			final IModelIndexer indexer = getHawkInstance().getIndexer();
+			waitForImmediateSync(indexer, new Callable<Object>() {
+				@Override
+				public Object call() throws Exception {
+					return null;
+				}
+			});
+		} catch (Throwable e) {
+			HawkCrossReferencesPlugin.getDefault().logError(e);
+		}
+	}
+
+	protected void waitForImmediateSync(final IModelIndexer indexer, final Callable<?> r) throws Throwable {
+		final Semaphore sem = new Semaphore(0);
+		final SyncEndListener changeListener = new SyncEndListener(r, sem);
+		indexer.addGraphChangeListener(changeListener);
+		indexer.requestImmediateSync();
+		if (!sem.tryAcquire(600, TimeUnit.SECONDS)) {
+			throw new TimeoutException();
+		} else {
+			indexer.removeGraphChangeListener(changeListener);
+			if (changeListener.getThrowable() != null) {
+				throw changeListener.getThrowable();
+			}
+		}
 	}
 
 }
