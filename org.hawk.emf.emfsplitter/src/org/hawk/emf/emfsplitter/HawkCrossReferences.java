@@ -455,4 +455,10 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		}
 	}
 
+	@Override
+	public void update() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
