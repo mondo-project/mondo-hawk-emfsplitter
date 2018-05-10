@@ -65,6 +65,7 @@ import org.hawk.graph.ModelElementNode;
 import org.hawk.neo4j_v2.Neo4JDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
+import org.hawk.workspace.LocalHistoryWorkspace;
 import org.hawk.workspace.Workspace;
 import org.mondo.generate.index.project.ext.IIndexAttribute;
 import org.mondo.modular.constraint.ext.def.IExecuteConstraint;
@@ -126,7 +127,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 					}
 				}
 
-				final IVcsManager repo = new Workspace();
+				final IVcsManager repo = new LocalHistoryWorkspace();
 				hm.addVCS(repo.getLocation(), repo.getClass().getName(), "", "", false);
 				hm.sync();
 			}
