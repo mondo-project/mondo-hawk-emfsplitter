@@ -138,20 +138,6 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		return true;
 	}
 
-	protected String buildDefaultNamespaces(List<String> metamodelURIs) {
-		StringBuilder sb = new StringBuilder();
-		boolean first = true;
-		for (String mmURI : metamodelURIs) {
-			if (first) {
-				first = false;
-			} else {
-				sb.append(",");
-			}
-			sb.append(mmURI);
-		}
-		return sb.toString();
-	}
-
 	@Override
 	public boolean finish(String modularNature) {
 		// Nothing to do - Hawk shuts down by itself using a workbench listener
@@ -277,9 +263,10 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 					EMFModelResourceFactory.class.getName()
 				);
 
+				// No periodic updates 
 				hawkInstance = HModel.create(new LocalHawkFactory(), HAWK_INSTANCE, storageFolder,
 							storageFolder.toURI().toASCIIString(), Neo4JDatabase.class.getName(),
-							plugins, hawkManager, hawkManager.getCredentialsStore(), 10_000, 100_000);
+							plugins, hawkManager, hawkManager.getCredentialsStore(), 0, 0);
 			}
 
 			if (!hawkInstance.isRunning()) {
@@ -303,7 +290,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		}
 	}
 
-	private class ConstraintExecutor {
+	private static class ConstraintExecutor {
 		private IModelIndexer indexer;
 		private IGraphDatabase db;
 		private CEOLQueryEngine eol;
@@ -391,11 +378,53 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 				return result;
 			}
 		}
+
+		private void addQueryArguments(Map<String, Object> args, IEolModule module) {
+			if (args != null) {
+				for (Entry<String, Object> entry : args.entrySet()) {
+					module.getContext().getFrameStack().putGlobal(new Variable(entry.getKey(), entry.getValue(), null));
+				}
+			}
+		}
+
+		protected String buildDefaultNamespaces(List<String> metamodelURIs) {
+			StringBuilder sb = new StringBuilder();
+			boolean first = true;
+			for (String mmURI : metamodelURIs) {
+				if (first) {
+					first = false;
+				} else {
+					sb.append(",");
+				}
+				sb.append(mmURI);
+			}
+			return sb.toString();
+		}
+
+		@SuppressWarnings("unchecked")
+		protected void replaceNodesWithURIs(Object result) {
+			List<Object> l = (List<Object>)result;
+			for (int i = 0; i < l.size(); i++) {
+				Object elem = l.get(i);
+				if (elem instanceof GraphNodeWrapper) {
+					final GraphNodeWrapper gw = (GraphNodeWrapper) elem;
+					final ModelElementNode meNode = new ModelElementNode(gw.getNode());
+
+					IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+					IFile iFile = workspaceRoot.getFile(new Path(meNode.getFileNode().getFilePath()));
+					if (iFile != null) {
+						l.set(i, iFile.getLocationURI().toString() + "#" + meNode.getElementId());
+					}
+				} else if (elem instanceof List<?>) {
+					replaceNodesWithURIs(elem);
+				}
+			}
+		}
 		
 	}
 
 	// Share a bit of state between calls, so we can cache some repeated calls
-	ConstraintExecutor constraintExecutor = new ConstraintExecutor();
+	static ConstraintExecutor constraintExecutor = new ConstraintExecutor();
 
 	@Override
 	public Object executeConstraint(final String constraint, final java.net.URI modelURI, final java.net.URI metaModelURI, final List<String> metamodelURIs, final boolean isUnit) {
@@ -431,34 +460,6 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	protected void replaceNodesWithURIs(Object result) {
-		List<Object> l = (List<Object>)result;
-		for (int i = 0; i < l.size(); i++) {
-			Object elem = l.get(i);
-			if (elem instanceof GraphNodeWrapper) {
-				final GraphNodeWrapper gw = (GraphNodeWrapper) elem;
-				final ModelElementNode meNode = new ModelElementNode(gw.getNode());
-
-				IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-				IFile iFile = workspaceRoot.getFile(new Path(meNode.getFileNode().getFilePath()));
-				if (iFile != null) {
-					l.set(i, iFile.getLocationURI().toString() + "#" + meNode.getElementId());
-				}
-			} else if (elem instanceof List<?>) {
-				replaceNodesWithURIs(elem);
-			}
-		}
-	}
-	
-	private void addQueryArguments(Map<String, Object> args, IEolModule module) {
-		if (args != null) {
-			for (Entry<String, Object> entry : args.entrySet()) {
-				module.getContext().getFrameStack().putGlobal(new Variable(entry.getKey(), entry.getValue(), null));
-			}
-		}
-	}
-
 	@Override
 	public void update() {
 		try {
@@ -479,7 +480,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 		final SyncEndListener changeListener = new SyncEndListener(r, sem);
 		indexer.addGraphChangeListener(changeListener);
 		indexer.requestImmediateSync();
-		if (!sem.tryAcquire(600, TimeUnit.SECONDS)) {
+		if (!sem.tryAcquire(6000, TimeUnit.SECONDS)) {
 			throw new TimeoutException();
 		} else {
 			indexer.removeGraphChangeListener(changeListener);
