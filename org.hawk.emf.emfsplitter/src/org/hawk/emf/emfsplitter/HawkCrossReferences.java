@@ -424,7 +424,7 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 	}
 
 	// Share a bit of state between calls, so we can cache some repeated calls
-	static ConstraintExecutor constraintExecutor = new ConstraintExecutor();
+	ConstraintExecutor constraintExecutor = new ConstraintExecutor();
 
 	@Override
 	public Object executeConstraint(final String constraint, final java.net.URI modelURI, final java.net.URI metaModelURI, final List<String> metamodelURIs, final boolean isUnit) {
