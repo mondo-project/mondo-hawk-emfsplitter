@@ -62,6 +62,7 @@ import org.hawk.epsilon.emc.CEOLQueryEngine;
 import org.hawk.epsilon.emc.EOLQueryEngine;
 import org.hawk.epsilon.emc.wrappers.GraphNodeWrapper;
 import org.hawk.graph.ModelElementNode;
+import org.hawk.graph.updater.GraphModelUpdater;
 import org.hawk.neo4j_v2.Neo4JDatabase;
 import org.hawk.osgiserver.HModel;
 import org.hawk.ui2.util.HUIManager;
@@ -260,7 +261,8 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 				// Limit to EMF, EOL and core graph updater
 				List<String> plugins = Arrays.asList(
 					EMFMetaModelResourceFactory.class.getName(),
-					EMFModelResourceFactory.class.getName()
+					EMFModelResourceFactory.class.getName(),
+					GraphModelUpdater.class.getName()
 				);
 
 				// No periodic updates 
