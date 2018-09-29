@@ -12,6 +12,9 @@ package org.hawk.emf.emfsplitter;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -71,6 +74,8 @@ import org.hawk.workspace.Workspace;
 import org.mondo.generate.index.project.ext.IIndexAttribute;
 import org.mondo.modular.constraint.ext.def.IExecuteConstraint;
 import org.mondo.modular.references.ext.IEditorCrossReferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -80,6 +85,7 @@ import org.mondo.modular.references.ext.IEditorCrossReferences;
  */
 public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttribute, IExecuteConstraint {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(HawkCrossReferences.class);
 	private static final String HAWK_INSTANCE = "emfsplitter";
 
 	@Override
@@ -412,10 +418,17 @@ public class HawkCrossReferences implements IEditorCrossReferences, IIndexAttrib
 					final GraphNodeWrapper gw = (GraphNodeWrapper) elem;
 					final ModelElementNode meNode = new ModelElementNode(gw.getNode());
 
-					IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-					IFile iFile = workspaceRoot.getFile(new Path(meNode.getFileNode().getFilePath()));
-					if (iFile != null) {
-						l.set(i, iFile.getLocationURI().toString() + "#" + meNode.getElementId());
+					final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+					final String encodedPath = meNode.getFileNode().getFilePath();
+					try {
+						// File nodes have encoded paths - decode these
+						final String decodedPath = URLDecoder.decode(encodedPath, StandardCharsets.UTF_8.toString());
+						final IFile iFile = workspaceRoot.getFile(new Path(decodedPath));
+						if (iFile != null) {
+							l.set(i, iFile.getLocationURI().toString() + "#" + meNode.getElementId());
+						}
+					} catch (UnsupportedEncodingException e) {
+						LOGGER.error(e.getMessage(), e);
 					}
 				} else if (elem instanceof List<?>) {
 					replaceNodesWithURIs(elem);
